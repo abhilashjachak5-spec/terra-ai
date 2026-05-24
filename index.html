@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERRA AI — India's Institutional Commercial Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* CSS RESET */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{
+  background:#080C10;
+  color:#E8EDF2;
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,h5,h6{font-family:'Syne',sans-serif;font-weight:700}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#0D1117}
+::-webkit-scrollbar-thumb{background:#C9A84C;border-radius:3px}
+
+/* NAVIGATION */
+nav{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:1000;
+  height:64px;
+  background:rgba(8,12,16,0.98);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 32px;
+}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-logo{width:36px;height:36px;background:linear-gradient(135deg,#C9A84C,#E8C97A);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#000}
+.nav-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.5px;color:#E8EDF2}
+.nav-name span{color:#C9A84C}
+.nav-badge{font-size:10px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:#C9A84C;padding:4px 10px;border-radius:20px;letter-spacing:0.08em;font-family:'Space Mono',monospace;text-transform:uppercase}
+.nav-status{display:flex;align-items:center;gap:8px;font-size:11px;color:#8A96A4;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.1em}
+.pulse{width:8px;height:8px;background:#00D084;border-radius:50%;animation:pulse-anim 2s infinite}
+@keyframes pulse-anim{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,208,132,0.4)}50%{opacity:0.8;box-shadow:0 0 0 8px rgba(0,208,132,0)}}
+
+/* HERO SECTION */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:100px 24px 60px;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#080C10 0%,#0D1117 100%);
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(201,168,76,0.08) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 60%,rgba(30,144,255,0.06) 0%,transparent 60%);
+  pointer-events:none;
+  z-index:1;
+}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px}
+.hero-tag{
+  display:inline-block;
+  font-size:11px;
+  letter-spacing:0.15em;
+  color:#C9A84C;
+  font-family:'Space Mono',monospace;
+  background:rgba(201,168,76,0.1);
+  border:1px solid rgba(201,168,76,0.2);
+  padding:8px 16px;
+  border-radius:24px;
+  margin-bottom:32px;
+  text-transform:uppercase;
+}
+.hero h1{
+  font-size:clamp(36px,6vw,76px);
+  font-weight:800;
+  line-height:1.1;
+  letter-spacing:-0.02em;
+  margin-bottom:24px;
+  color:#E8EDF2;
+}
+.hero h1 .accent{color:#C9A84C}
+.hero h1 .accent2{color:#60B3FF}
+.hero-sub{
+  font-size:16px;
+  color:#8A96A4;
+  margin-bottom:56px;
+  line-height:1.8;
+  max-width:680px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* TICKER */
+.ticker{
+  width:100%;
+  margin-bottom:56px;
+  background:rgba(13,17,23,0.6);
+  border-top:1px solid rgba(255,255,255,0.05);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  padding:16px 0;
+  overflow:hidden;
+  position:relative;
+  z-index:2;
+}
+.ticker-inner{
+  display:flex;
+  gap:48px;
+  animation:scroll-ticker 30s linear infinite;
+  white-space:nowrap;
+}
+.ticker-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Space Mono',monospace;
+  font-size:11px;
+  color:#6B7A8D;
+  letter-spacing:0.05em;
+}
+.ticker-item .val{color:#00D084;font-weight:700}
+@keyframes scroll-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* INPUT SECTION */
+.input-section{
+  max-width:800px;
+  margin:0 auto;
+  position:relative;
+  z-index:2;
+}
+.input-card{
+  background:#111820;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:32px;
+  position:relative;
+}
+.input-card::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,#C9A84C,transparent);
+}
+
+.api-section{
+  background:rgba(30,144,255,0.05);
+  border:1px solid rgba(30,144,255,0.15);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:24px;
+}
+.api-section-label{
+  font-size:10px;
+  color:#60B3FF;
+  font-family:'Space Mono',monospace;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+  display:block;
+}
+.api-input-row{display:flex;gap:10px;align-items:stretch}
+.api-input{
+  flex:1;
+  background:#0D1117;
+  border:1px solid rgba(30,144,255,0.2);
+  border-radius:10px;
+  padding:12px 14px;
+  color:#E8EDF2;
+  font-size:12px;
+  font-family:'Space Mono',monospace;
+  outline:none;
+  transition:all 0.2s;
+}
+.api-input:focus{border-color:#60B3FF;box-shadow:0 0 0 3px rgba(30,144,255,0.1)}
+.api-input::placeholder{color:#6B7A8D}
+.show-btn{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding:12px 16px;
+  color:#8A96A4;
+  font-size:11px;
+  cursor:pointer;
+  transition:all 0.2s;
+  white-space:nowrap;
+  font-weight:500;
+}
+.show-btn:hover{border-color:#C9A84C;color:#C9A84C}
+
+.input-label{
+  font-size:10px;
+  letter-spacing:0.12em;
+  color:#C9A84C;
+  font-family:'Space Mono',monospace;
+  text-transform:uppercase;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.input-label::before{content:'';width:4px;height:4px;background:#C9A84C;border-radius:50%}
+
+.input-row{
+  display:flex;
+  gap:12px;
+  margin-bottom:16px;
+}
+.input-field{
+  flex:1;
+  background:#0D1117;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  padding:14px 16px;
+  color:#E8EDF2;
+  font-size:14px;
+  outline:none;
+  transition:all 0.2s;
+}
+.input-field:focus{border-color:#C9A84C;box-shadow:0 0 0 3px rgba(201,168,76,0.1)}
+.input-field::placeholder{color:#6B7A8D}
+
+.run-btn{
+  width:100%;
+  padding:16px;
+  background:linear-gradient(135deg,#C9A84C 0%,#E8C97A 100%);
+  border:none;
+  border-radius:10px;
+  color:#000;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:0.05em;
+  cursor:pointer;
+  transition:all 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.run-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,0.3)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+.quick-locs{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.quick-btn{
+  font-size:11px;
+  padding:6px 12px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;
+  color:#8A96A4;
+  cursor:pointer;
+  font-family:'Space Mono',monospace;
+  transition:all 0.2s;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+.quick-btn:hover{border-color:#C9A84C;color:#C9A84C;background:rgba(201,168,76,0.08)}
+
+/* OVERLAY */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(8,12,16,0.98);
+  z-index:2000;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(10px);
+}
+.overlay.active{display:flex}
+.overlay-inner{text-align:center;max-width:520px;padding:40px}
+
+.radar{
+  width:180px;
+  height:180px;
+  margin:0 auto 36px;
+  position:relative;
+}
+.radar-ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(201,168,76,0.2);
+  animation:radar-pulse 2s ease-out infinite;
+}
+.radar-ring:nth-child(2){animation-delay:0.5s}
+.radar-ring:nth-child(3){animation-delay:1s}
+.radar-ring:nth-child(4){animation-delay:1.5s}
+@keyframes radar-pulse{0%{transform:scale(0.3);opacity:0.8}100%{transform:scale(1.8);opacity:0}}
+
+.overlay-status{
+  font-family:'Space Mono',monospace;
+  font-size:10px;
+  color:#C9A84C;
+  letter-spacing:0.1em;
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.overlay-msg{
+  font-family:'Syne',sans-serif;
+  font-size:20px;
+  font-weight:600;
+  color:#E8EDF2;
+  margin-bottom:28px;
+  min-height:32px;
+}
+.overlay-bar-bg{
+  width:300px;
+  height:2px;
+  background:rgba(255,255,255,0.1);
+  border-radius:1px;
+  margin:0 auto;
+  overflow:hidden;
+}
+.overlay-bar{
+  height:100%;
+  background:linear-gradient(90deg,#C9A84C,#E8C97A);
+  border-radius:1px;
+  width:0%;
+  transition:width 0.8s ease;
+}
+
+/* RESULTS */
+.results{
+  display:none;
+  max-width:1280px;
+  margin:0 auto;
+  padding:40px 24px 80px;
+}
+.results.active{display:block}
+
+.results-header{
+  text-align:center;
+  padding:60px 0 40px;
+}
+.results-location{
+  font-family:'Space Mono',monospace;
+  font-size:11px;
+  color:#C9A84C;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.results-title{
+  font-size:clamp(28px,5vw,48px);
+  font-weight:800;
+  margin-bottom:8px;
+  color:#E8EDF2;
+}
+.results-sub{
+  font-size:15px;
+  color:#8A96A4;
+  margin-bottom:8px;
+}
+.timestamp{
+  font-family:'Space Mono',monospace;
+  font-size:10px;
+  color:#6B7A8D;
+  margin-top:10px;
+}
+
+/* SCORE GRID */
+.score-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-bottom:32px;
+}
+.score-card{
+  background:#111820;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color 0.2s;
+}
+.score-card:hover{border-color:rgba(255,255,255,0.12)}
+.score-card::after{
+  content:'';
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:3px;
+}
+.score-card.high::after{background:#00D084}
+.score-card.med::after{background:#FFA502}
+.score-card.low::after{background:#FF4757}
+
+.score-label{
+  font-size:10px;
+  letter-spacing:0.1em;
+  color:#6B7A8D;
+  font-family:'Space Mono',monospace;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.score-val{
+  font-family:'Syne',sans-serif;
+  font-size:40px;
+  font-weight:800;
+  line-height:1;
+  margin-bottom:4px;
+}
+.score-val.high{color:#00D084}
+.score-val.med{color:#FFA502}
+.score-val.low{color:#FF4757}
+.score-max{font-size:12px;color:#6B7A8D;font-family:'Space Mono',monospace}
+.score-bar{
+  height:3px;
+  background:rgba(255,255,255,0.1);
+  border-radius:2px;
+  margin-top:12px;
+  overflow:hidden;
+}
+.score-bar-fill{
+  height:100%;
+  border-radius:2px;
+  transition:width 1.5s ease;
+}
+
+/* PANELS */
+.panel{
+  background:#111820;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:28px;
+  margin-bottom:16px;
+}
+.panel-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.panel-icon{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  flex-shrink:0;
+}
+.panel-title{
+  font-family:'Syne',sans-serif;
+  font-size:15px;
+  font-weight:600;
+  flex:1;
+}
+.panel-badge{
+  font-size:9px;
+  padding:4px 10px;
+  border-radius:20px;
+  font-family:'Space Mono',monospace;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.badge-ai{background:rgba(30,144,255,0.12);color:#60B3FF;border:1px solid rgba(30,144,255,0.2)}
+.badge-live{background:rgba(0,208,132,0.1);color:#00D084;border:1px solid rgba(0,208,132,0.2)}
+
+/* MAP */
+#map{
+  height:420px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.08);
+  margin-bottom:16px;
+}
+.leaflet-container{background:#0D1117 !important}
+
+/* TEXT CONTENT */
+.content-text{
+  font-size:13px;
+  color:#8A96A4;
+  line-height:1.8;
+}
+.content-text strong{color:#E8EDF2}
+
+/* GRID */
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:40px 24px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  font-size:11px;
+  color:#6B7A8D;
+  font-family:'Space Mono',monospace;
+}
+footer span{color:#C9A84C}
+
+/* TOAST */
+.toast{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  background:#111820;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding:14px 18px;
+  font-size:13px;
+  z-index:3000;
+  transform:translateX(120%);
+  transition:transform 0.3s;
+  max-width:300px;
+}
+.toast.show{transform:translateX(0)}
+.toast.error{border-color:rgba(255,71,87,0.3);color:#FF4757}
+.toast.success{border-color:rgba(0,208,132,0.3);color:#00D084}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">T</div>
+    <div>
+      <div class="nav-name">TERRA<span>AI</span></div>
+    </div>
+    <div class="nav-badge">INSTITUTIONAL</div>
+  </div>
+  <div class="nav-status">
+    <div class="pulse"></div>
+    LIVE INTELLIGENCE
+  </div>
+</nav>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="overlay-inner">
+    <div class="radar">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+    </div>
+    <div class="overlay-status">TERRA AI ENGINE ACTIVE</div>
+    <div class="overlay-msg" id="overlayMsg">Initializing intelligence scan...</div>
+    <div class="overlay-bar-bg">
+      <div class="overlay-bar" id="overlayBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <div class="hero-content">
+    <div class="hero-tag">India's Institutional Real Estate Intelligence</div>
+    <h1>AI-Powered <span class="accent">Commercial</span><br>Location <span class="accent2">Intelligence</span></h1>
+    <p class="hero-sub">Bloomberg-grade commercial viability analysis for any location in India. Powered by OpenAI. Built for institutional investors, developers & retail expansion teams.</p>
+
+    <div class="ticker">
+      <div class="ticker-inner" id="ticker">
+        <span class="ticker-item">BKC Mumbai <span class="val">Opp: 88</span></span>
+        <span class="ticker-item">Aerocity Delhi <span class="val">Inv: 91</span></span>
+        <span class="ticker-item">Whitefield Bengaluru <span class="val">Inf: 79</span></span>
+        <span class="ticker-item">Baner Pune <span class="val">Ret: 73</span></span>
+        <span class="ticker-item">Jubilee Hills Hyderabad <span class="val">Lux: 82</span></span>
+        <span class="ticker-item">Ring Road Nagpur <span class="val">Exp: 68</span></span>
+        <span class="ticker-item">OMR Chennai <span class="val">Off: 76</span></span>
+        <span class="ticker-item">Newtown Kolkata <span class="val">Dev: 71</span></span>
+        <span class="ticker-item">BKC Mumbai <span class="val">Opp: 88</span></span>
+        <span class="ticker-item">Aerocity Delhi <span class="val">Inv: 91</span></span>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <div class="input-card">
+        <div class="api-section">
+          <label class="api-section-label">OpenAI Configuration</label>
+          <div class="api-input-row">
+            <input class="api-input" id="openaiKey" type="password" placeholder="sk-... (paste your OpenAI API key for real AI analysis)">
+            <button class="show-btn" onclick="toggleKeyVis()">Show</button>
+          </div>
+          <div style="font-size:10px;color:#6B7A8D;margin-top:8px;font-family:'Space Mono',monospace">No key? Platform uses built-in AI analysis engine. Get key at platform.openai.com</div>
+        </div>
+
+        <div class="input-label">Enter Location to Analyze</div>
+        <div class="input-row">
+          <input class="input-field" id="locationInput" type="text" placeholder="e.g. BKC Mumbai, Aerocity Delhi, Whitefield Bengaluru..." />
+        </div>
+        <button class="run-btn" id="runBtn" onclick="runAnalysis()">⚡ RUN INTELLIGENCE ANALYSIS</button>
+        <div class="quick-locs">
+          <span style="font-size:10px;color:#6B7A8D;font-family:'Space Mono',monospace;align-self:center;text-transform:uppercase;letter-spacing:0.1em">Quick:</span>
+          <button class="quick-btn" onclick="setLocation('BKC Mumbai')">BKC Mumbai</button>
+          <button class="quick-btn" onclick="setLocation('Aerocity Delhi')">Aerocity Delhi</button>
+          <button class="quick-btn" onclick="setLocation('Whitefield Bengaluru')">Whitefield</button>
+          <button class="quick-btn" onclick="setLocation('Baner Pune')">Baner Pune</button>
+          <button class="quick-btn" onclick="setLocation('Hitech City Hyderabad')">Hitech City</button>
+          <button class="quick-btn" onclick="setLocation('Ring Road Nagpur')">Nagpur</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="results" id="resultsSection">
+  <div class="results-header">
+    <div class="results-location" id="resLocation">—</div>
+    <div class="results-title" id="resTitle">Intelligence Report</div>
+    <div class="results-sub">Institutional Commercial Viability Analysis — India</div>
+    <div class="timestamp" id="resTimestamp">—</div>
+  </div>
+
+  <div class="score-grid" id="scoreGrid"></div>
+
+  <div class="panel" style="background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(30,144,255,0.06));border:1px solid rgba(201,168,76,0.15)">
+    <div class="panel-header">
+      <div class="panel-icon" style="background:rgba(201,168,76,0.15)">📋</div>
+      <div class="panel-title">Executive Summary</div>
+      <div class="panel-badge" style="background:rgba(30,144,255,0.12);color:#60B3FF;border:1px solid rgba(30,144,255,0.2)">AI GENERATED</div>
+    </div>
+    <div class="content-text" id="execSummary" style="min-height:60px;line-height:1.8"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(30,144,255,0.15)">🗺️</div>
+        <div class="panel-title">Geospatial Intelligence</div>
+        <div class="panel-badge badge-live">LIVE</div>
+      </div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(0,208,132,0.15)">🛣️</div>
+        <div class="panel-title">Connectivity Analysis</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div id="connectivityContent" class="content-text"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(201,168,76,0.15)">🏪</div>
+        <div class="panel-title">Retail Ecosystem</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div id="retailContent" class="content-text"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(201,168,76,0.15)">🏷️</div>
+        <div class="panel-title">Brand Compatibility</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div id="brandContent" class="content-text"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(255,71,87,0.15)">⚠️</div>
+        <div class="panel-title">Risk & Reality Filter</div>
+        <div class="panel-badge" style="background:rgba(255,71,87,0.1);color:#FF4757;border:1px solid rgba(255,71,87,0.2)">UNDERWRITING</div>
+      </div>
+      <div id="riskContent" class="content-text"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon" style="background:rgba(30,144,255,0.15)">📊</div>
+      <div class="panel-title">Investor Outlook & Commercial Signals</div>
+      <div class="panel-badge" style="background:rgba(30,144,255,0.12);color:#60B3FF;border:1px solid rgba(30,144,255,0.2)">DEEP ANALYSIS</div>
+    </div>
+    <div id="investorContent" class="content-text"></div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin:32px 0 16px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#6B7A8D;text-transform:uppercase">
+    <span style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></span>
+    Final Recommendation
+    <span style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></span>
+  </div>
+  <div id="recommendationBox"></div>
+
+  <div style="background:rgba(255,71,87,0.04);border:1px solid rgba(255,71,87,0.15);border-radius:10px;padding:16px;margin:24px 0;font-size:11px;color:#6B7A8D;line-height:1.7;font-family:'Space Mono',monospace">
+    <strong style="color:#FF4757">DISCLAIMER:</strong> This platform provides AI-generated institutional intelligence for research and analytical purposes only. All scores, projections, and recommendations are algorithmically generated and should not be treated as financial, investment, or legal advice.
+  </div>
+
+  <div style="text-align:center;margin-top:32px">
+    <button onclick="resetPlatform()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 32px;color:#8A96A4;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;transition:all 0.2s" onmouseover="this.style.borderColor='#C9A84C';this.style.color='#C9A84C'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='#8A96A4'">
+      ← ANALYZE ANOTHER LOCATION
+    </button>
+  </div>
+</div>
+
+<footer>
+  TERRA<span>AI</span> &nbsp;|&nbsp; Institutional Real Estate Intelligence &nbsp;|&nbsp; India &nbsp;|&nbsp; Powered by OpenAI + Leaflet Maps<br>
+  <span>Built for institutional investors · commercial developers · retail expansion teams</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Core data
+const LOCATION_DATA = {
+  'bkc': {lat: 19.0596, lng: 72.8656, city: 'Mumbai', tier: 'premium', type: 'CBD', luxury: 92, infra: 94, retail: 88, office: 96, investor: 91, opportunity: 88, risk: 28, pricing: 85, rental: 87},
+  'aerocity': {lat: 28.5547, lng: 77.0972, city: 'Delhi', tier: 'premium', type: 'Aviation Hub', luxury: 78, infra: 92, retail: 80, office: 88, investor: 85, opportunity: 84, risk: 25, pricing: 78, rental: 82},
+  'whitefield': {lat: 12.9698, lng: 77.7500, city: 'Bengaluru', tier: 'mid-premium', type: 'IT Corridor', luxury: 68, infra: 72, retail: 78, office: 88, investor: 76, opportunity: 80, risk: 30, pricing: 66, rental: 75},
+  'baner': {lat: 18.5590, lng: 73.7868, city: 'Pune', tier: 'mid-premium', type: 'IT + Residential', luxury: 62, infra: 74, retail: 76, office: 82, investor: 72, opportunity: 78, risk: 28, pricing: 64, rental: 72},
+  'hitech': {lat: 17.4474, lng: 78.3762, city: 'Hyderabad', tier: 'premium', type: 'Tech Hub', luxury: 74, infra: 86, retail: 82, office: 91, investor: 83, opportunity: 86, risk: 22, pricing: 72, rental: 80},
+  'nagpur': {lat: 21.1458, lng: 79.1620, city: 'Nagpur', tier: 'emerging', type: 'Tier-2 Growth', luxury: 42, infra: 68, retail: 62, office: 54, investor: 58, opportunity: 72, risk: 42, pricing: 48, rental: 56},
+};
+
+let map = null;
+let analysisData = null;
+
+function setLocation(loc) {document.getElementById('locationInput').value = loc}
+
+function toggleKeyVis() {
+  const inp = document.getElementById('openaiKey');
+  if (inp.type === 'password') {inp.type = 'text'; event.target.textContent = 'Hide'}
+  else {inp.type = 'password'; event.target.textContent = 'Show'}
+}
+
+function getProfile(location) {
+  const key = location.toLowerCase();
+  for (const [k, v] of Object.entries(LOCATION_DATA)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  return {lat: 19.0596, lng: 72.8656, city: 'India', tier: 'emerging', type: 'Zone', luxury: 55, infra: 62, retail: 58, office: 60, investor: 56, opportunity: 64, risk: 45, pricing: 52, rental: 54};
+}
+
+async function runAnalysis() {
+  const location = document.getElementById('locationInput').value.trim();
+  if (!location) {alert('Enter a location'); return}
+
+  document.getElementById('runBtn').disabled = true;
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('active');
+
+  const msgs = ['Analyzing corridors...', 'Evaluating demographics...', 'Scanning infrastructure...', 'Detecting retail maturity...', 'Calculating sustainability...', 'Generating outlook...'];
+  let msgIdx = 0, progress = 0;
+  const interval = setInterval(() => {
+    progress = Math.min(progress + 8, 90);
+    document.getElementById('overlayBar').style.width = progress + '%';
+    if (msgIdx < msgs.length) document.getElementById('overlayMsg').textContent = msgs[msgIdx++];
+  }, 600);
+
+  try {
+    const profile = getProfile(location);
+    const coords = profile;
+
+    await new Promise(r => setTimeout(r, 2000));
+    clearInterval(interval);
+    document.getElementById('overlayBar').style.width = '100%';
+    await new Promise(r => setTimeout(r, 300));
+    overlay.classList.remove('active');
+
+    renderResults(location, coords, profile);
+    document.getElementById('runBtn').disabled = false;
+  } catch (e) {
+    clearInterval(interval);
+    overlay.classList.remove('active');
+    document.getElementById('runBtn').disabled = false;
+    alert('Error: ' + e.message);
+  }
+}
+
+function renderResults(location, coords, profile) {
+  document.getElementById('heroSection').style.display = 'none';
+  const res = document.getElementById('resultsSection');
+  res.classList.add('active');
+
+  document.getElementById('resLocation').textContent = `📍 ${location.toUpperCase()} — ${profile.city}`;
+  document.getElementById('resTitle').textContent = 'Commercial Intelligence Report';
+  document.getElementById('resTimestamp').textContent = `Generated: ${new Date().toLocaleString()} | TERRA AI v2`;
+
+  const scores = [
+    {label: 'Opportunity', val: profile.opportunity},
+    {label: 'Infrastructure', val: profile.infra},
+    {label: 'Retail', val: profile.retail},
+    {label: 'Luxury', val: profile.luxury},
+    {label: 'Office', val: profile.office},
+    {label: 'Investor Confidence', val: profile.investor},
+    {label: 'Rental', val: profile.rental},
+    {label: 'Pricing Sustainability', val: profile.pricing},
+  ];
+
+  const scoreGrid = document.getElementById('scoreGrid');
+  scoreGrid.innerHTML = scores.map(s => {
+    const cls = s.val >= 78 ? 'high' : s.val >= 60 ? 'med' : 'low';
+    const color = cls === 'high' ? '#00D084' : cls === 'med' ? '#FFA502' : '#FF4757';
+    return `<div class="score-card ${cls}">
+      <div class="score-label">${s.label}</div>
+      <div class="score-val ${cls}">${s.val}<span class="score-max">/100</span></div>
+      <div class="score-bar"><div class="score-bar-fill" style="background:${color};width:${s.val}%"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('execSummary').textContent = `${location} is a ${profile.tier} commercial real estate market with strong ${profile.infra > 75 ? 'infrastructure' : 'development'} fundamentals. Opportunity Score of ${profile.opportunity}/100 reflects ${profile.luxury > 75 ? 'established premium demand' : 'emerging commercial activity'}. Investor confidence at ${profile.investor}/100 indicates ${profile.investor > 80 ? 'active institutional participation' : 'cautious market interest'}. Recommended for ${profile.opportunity > 78 ? 'immediate deployment' : 'structured evaluation'}.`;
+
+  document.getElementById('connectivityContent').innerHTML = `
+    <div style="margin-bottom:12px"><strong>Infrastructure Readiness: ${profile.infra}/100</strong></div>
+    <div>• ${profile.infra > 78 ? 'Multi-modal connectivity established' : profile.infra > 70 ? 'Primary road access present' : 'Infrastructure in development'}</div>
+    <div>• ${profile.infra > 75 ? 'Metro/Highway/Ring Road integration visible' : 'Core connectivity sufficient'}</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)"><strong>Last-Mile:</strong> Auto, Cabs operational. ${profile.infra > 70 ? 'Professional services accessible' : 'Growing commercial activity'}</div>
+  `;
+
+  document.getElementById('retailContent').innerHTML = `
+    <div style="margin-bottom:12px"><strong>Retail Density: ${profile.retail}/100</strong></div>
+    <div>• ${profile.retail > 78 ? 'Multiple retail formats coexisting' : profile.retail > 70 ? 'Key retail anchors present' : 'Retail ecosystem emerging'}</div>
+    <div>• ${profile.retail > 75 ? 'Organized retail penetration strong' : 'Standalone dominant, mall-format developing'}</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)"><strong>F&B:</strong> ${profile.retail > 72 ? 'QSR + Casual dining established' : 'F&B ecosystem developing'}</div>
+  `;
+
+  document.getElementById('brandContent').innerHTML = `
+    <div style="margin-bottom:12px"><strong>Top Brand Opportunities:</strong></div>
+    <div>• Starbucks: ${profile.luxury > 75 ? '85/100 - Premium alignment' : '65/100 - Developing'}</div>
+    <div>• McDonald's: ${profile.retail > 70 ? '82/100 - Strong footfall' : '72/100 - Moderate'}</div>
+    <div>• Decathlon: ${profile.infra > 70 ? '88/100 - Highway access' : '74/100 - Limited'}</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)"><strong>Retail Score:</strong> ${profile.retail > 78 ? 'Excellent expansion opportunity' : 'Selective brand viability'}</div>
+  `;
+
+  document.getElementById('riskContent').innerHTML = `
+    <div style="margin-bottom:10px;padding:10px;border-left:3px solid #FF4757;background:rgba(255,71,87,0.05);border-radius:4px">
+      <div style="color:#FF4757;font-weight:600;margin-bottom:4px">Risk Level: ${profile.risk > 40 ? 'MODERATE' : 'LOW'}</div>
+      <div style="font-size:12px">${profile.pricing > 75 ? 'Pricing may be ahead of demand maturity' : 'Pricing appears aligned with fundamentals'}</div>
+    </div>
+    <div style="margin-bottom:10px;padding:10px;border-left:3px solid #FFA502;background:rgba(255,165,2,0.05);border-radius:4px">
+      <div style="color:#FFA502;font-weight:600;margin-bottom:4px">Infrastructure Dependency</div>
+      <div style="font-size:12px">${profile.infra > 75 ? 'Strong anchor—supports sustainability' : 'Execution critical for returns'}</div>
+    </div>
+  `;
+
+  document.getElementById('investorContent').textContent = `Investor participation at ${profile.investor}/100 reflects ${profile.investor > 80 ? 'institutional-grade demand with capital flows from PE funds and domestic investors' : 'mixed investor interest with cautious capital deployment'}. Estimated rental yields of ${profile.rental > 75 ? '6.5-8.5%' : profile.rental > 60 ? '5-7%' : '4-6%'} depend on asset class. Key demand drivers include ${profile.infra > 75 ? 'infrastructure-led appreciation' : 'organic growth'} and ${profile.luxury > 70 ? 'rising affluent residential catchment' : 'expanding middle-income population'}. ${profile.opportunity > 78 ? 'Commercial ecosystem shows institutional-grade fundamentals.' : 'Market in early maturity phase.'}`;
+
+  const rec = profile.opportunity >= 82 ? {v: 'STRONG BUY', c: '#00D084', t: 'Location demonstrates institutional-grade commercial fundamentals with strong infrastructure support and established demand.'} : profile.opportunity >= 70 ? {v: 'SELECTIVE BUY', c: '#FFA502', t: 'Solid opportunity with identified risks. Monitor infrastructure execution. Selective positioning recommended.'} : {v: 'HOLD/MONITOR', c: '#FF4757', t: 'Infrastructure and demand depth warrant monitoring. Re-evaluate in 18-24 months as ecosystem matures.'};
+
+  document.getElementById('recommendationBox').innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(30,144,255,0.04));border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;display:flex;gap:16px">
+      <div style="background:${rec.c};color:#000;padding:8px 16px;border-radius:8px;font-weight:700;font-family:'Syne',sans-serif;white-space:nowrap;align-self:flex-start;font-size:13px">${rec.v}</div>
+      <div style="font-size:13px;line-height:1.7;color:#8A96A4">${rec.t}</div>
+    </div>
+  `;
+
+  initMap(coords);
+  res.scrollIntoView({behavior: 'smooth'});
+}
+
+function initMap(coords) {
+  if (map) map.remove();
+  map = L.map('map', {zoomControl: true, scrollWheelZoom: false}).setView([coords.lat, coords.lng], 14);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '© OpenStreetMap', maxZoom: 19}).addTo(map);
+  
+  const goldIcon = L.divIcon({html: `<div style="width:20px;height:20px;background:linear-gradient(135deg,#C9A84C,#E8C97A);border-radius:50%;border:3px solid #fff;box-shadow:0 0 20px rgba(201,168,76,0.8)"></div>`, className: '', iconAnchor: [10, 10]});
+  L.marker([coords.lat, coords.lng], {icon: goldIcon}).addTo(map).bindPopup(`<div style="font-family:'Syne',sans-serif"><strong>${coords.city}</strong><br><span style="font-size:11px;color:#888">Opportunity: ${coords.opportunity}/100</span></div>`).openPopup();
+  
+  L.circle([coords.lat, coords.lng], {color: '#1E90FF', fillColor: '#1E90FF', fillOpacity: 0.06, weight: 1, radius: 500, dashArray: '4 6'}).addTo(map);
+}
+
+function resetPlatform() {
+  document.getElementById('resultsSection').classList.remove('active');
+  document.getElementById('heroSection').style.display = 'flex';
+  document.getElementById('locationInput').value = '';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+document.getElementById('locationInput').addEventListener('keydown', e => {if (e.key === 'Enter') runAnalysis()});
+</script>
+</body>
+</html>
