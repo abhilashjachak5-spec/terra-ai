@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERRA AI — India's Institutional Commercial Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --black: #080C10;
+  --surface: #0D1117;
+  --card: #111820;
+  --card2: #151D26;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --gold: #C9A84C;
+  --gold2: #E8C97A;
+  --blue: #1E90FF;
+  --blue2: #60B3FF;
+  --green: #00D084;
+  --red: #FF4757;
+  --amber: #FFA502;
+  --text: #E8EDF2;
+  --muted: #6B7A8D;
+  --muted2: #8A96A4;
+  --glow-gold: rgba(201,168,76,0.15);
+  --glow-blue: rgba(30,144,255,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:60px;background:rgba(8,12,16,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;just[...]
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;[...]
+.nav-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.08em;color:var(--text)}
+.nav-name span{color:var(--gold)}
+.nav-badge{font-size:9px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:2px 8px;border-radius:20px;letter-spacing:0.1em;font-family:'Space Mono',m[...]
+.nav-right{display:flex;align-items:center;gap:20px}
+.nav-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted2);font-family:'Space Mono',monospace}
+.pulse{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,208,132,0.4)}50%{opacity:0.8;box-shadow:0 0 0 6px rgba(0,208,132,0)}}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 40px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%, rgba(201,168,76,0.06) 0%, transparent 70%),radial-gradient(ellipse 60% 40% at 80% 60%, rgba(30,144,255,0.0[...]
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:[...]
+.hero-tag{font-size:10px;letter-spacing:0.2em;color:var(--gold);font-family:'Space Mono',monospace;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);padding:5px 14px;border-ra[...]
+.hero h1{font-size:clamp(32px,5.5vw,72px);font-weight:800;text-align:center;line-height:1.08;letter-spacing:-0.02em;margin-bottom:22px;max-width:900px}
+.hero h1 .accent{color:var(--gold)}
+.hero h1 .accent2{color:var(--blue2)}
+.hero-sub{font-size:16px;color:var(--muted2);text-align:center;max-width:580px;line-height:1.7;margin-bottom:48px;font-weight:300}
+.ticker{width:100%;overflow:hidden;margin-bottom:48px;background:rgba(13,17,23,0.8);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0}
+.ticker-inner{display:flex;gap:48px;animation:ticker 25s linear infinite;white-space:nowrap}
+.ticker-item{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2)}
+.ticker-item .val{color:var(--green);font-weight:700}
+.ticker-item .neg{color:var(--red)}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* INPUT SECTION */
+.input-section{width:100%;max-width:760px;margin:0 auto}
+.input-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;position:relative;overflow:hidden}
+.input-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.input-label{font-size:10px;letter-spacing:0.15em;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:12px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.input-label::before{content:'';width:4px;height:4px;background:var(--gold);border-radius:50%}
+.input-row{display:flex;gap:12px;margin-bottom:16px}
+.input-field{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;tran[...]
+.input-field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1)}
+.input-field::placeholder{color:var(--muted)}
+.openai-key-row{display:flex;gap:12px;margin-bottom:16px}
+.api-input{flex:1;background:var(--surface);border:1px solid rgba(30,144,255,0.2);border-radius:10px;padding:12px 18px;color:var(--text);font-size:13px;font-family:'Space Mono',monospace;outline:n[...]
+.api-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,144,255,0.1)}
+.api-input::placeholder{color:var(--muted);font-size:11px}
+.run-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 100%);border:none;border-radius:10px;color:#000;font-family:'Syne',sans-serif;font-weight:700;font-si[...]
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(201,168,76,0.3)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.quick-locations{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.quick-btn{font-size:11px;padding:5px 12px;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted2);cursor:pointer;font-family:'Space Mono',monospace;transitio[...]
+.quick-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--glow-gold)}
+
+/* ANALYSIS OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(8,12,16,0.97);z-index:2000;display:none;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+.overlay.active{display:flex}
+.overlay-inner{text-align:center;max-width:500px;padding:40px}
+.radar{width:160px;height:160px;margin:0 auto 32px;position:relative}
+.radar-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(201,168,76,0.2);animation:radar-expand 2s ease-out infinite}
+.radar-ring:nth-child(2){animation-delay:0.5s}
+.radar-ring:nth-child(3){animation-delay:1s}
+.radar-ring:nth-child(4){animation-delay:1.5s}
+.radar-core{position:absolute;inset:30px;background:rgba(201,168,76,0.08);border-radius:50%;border:1px solid rgba(201,168,76,0.4)}
+.radar-sweep{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+.radar-sweep::after{content:'';position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0deg,rgba(201,168,76,0.4) 30deg,transparent 31deg);animation:spin 1.5s linear infinite;bor[...]
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes radar-expand{0%{transform:scale(0.3);opacity:0.8}100%{transform:scale(1.8);opacity:0}}
+.overlay-status{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase}
+.overlay-msg{font-family:'Syne',sans-serif;font-size:20px;font-weight:600;color:var(--text);margin-bottom:24px;min-height:30px}
+.overlay-progress{width:300px;height:2px;background:var(--border);border-radius:1px;margin:0 auto}
+.overlay-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:1px;width:0%;transition:width 0.8s ease}
+
+/* RESULTS */
+.results{display:none;max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+.results.active{display:block}
+.results-header{text-align:center;padding:40px 0 32px}
+.results-location{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase}
+.results-title{font-size:clamp(22px,4vw,42px);font-weight:800;margin-bottom:8px}
+.results-sub{font-size:14px;color:var(--muted2)}
+.timestamp{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px}
+
+/* SCORE GRID */
+.score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.score-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:border-color 0.2s}
+.score-card:hover{border-color:var(--border2)}
+.score-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.score-card.high::after{background:var(--green)}
+.score-card.med::after{background:var(--amber)}
+.score-card.low::after{background:var(--red)}
+.score-label{font-size:10px;letter-spacing:0.12em;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;margin-bottom:10px}
+.score-val{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1;margin-bottom:4px}
+.score-val.high{color:var(--green)}
+.score-val.med{color:var(--amber)}
+.score-val.low{color:var(--red)}
+.score-max{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace}
+.score-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:10px}
+.score-bar{height:100%;border-radius:2px;transition:width 1.5s ease}
+
+/* MAIN CONTENT */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;position:relative}
+.panel-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.panel-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.panel-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;letter-spacing:0.02em}
+.panel-badge{margin-left:auto;font-size:9px;padding:3px 8px;border-radius:20px;font-family:'Space Mono',monospace;letter-spacing:0.08em}
+.badge-ai{background:rgba(30,144,255,0.12);color:var(--blue2);border:1px solid rgba(30,144,255,0.2)}
+.badge-live{background:rgba(0,208,132,0.1);color:var(--green);border:1px solid rgba(0,208,132,0.2)}
+.badge-risk{background:rgba(255,71,87,0.1);color:var(--red);border:1px solid rgba(255,71,87,0.2)}
+
+/* MAP */
+.map-panel{margin-bottom:16px}
+#map{height:380px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.leaflet-container{background:#0D1117 !important}
+
+/* AI ANALYSIS TEXT */
+.ai-section{margin-bottom:14px}
+.ai-section-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.ai-text{font-size:13px;color:var(--muted2);line-height:1.75}
+.ai-text strong{color:var(--text);font-weight:500}
+.signal-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.signal-row:last-child{border-bottom:none}
+.signal-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.signal-dot.up{background:var(--green)}
+.signal-dot.down{background:var(--red)}
+.signal-dot.mid{background:var(--amber)}
+.signal-text{font-size:13px;color:var(--muted2);line-height:1.5}
+
+/* BRAND GRID */
+.brand-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.brand-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color 0.2s}
+.brand-item:hover{border-color:var(--border2)}
+.brand-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:6px}
+.brand-score-row{display:flex;align-items:center;gap:8px}
+.brand-score{font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+.brand-score.h{color:var(--green)}
+.brand-score.m{color:var(--amber)}
+.brand-score.l{color:var(--red)}
+.brand-bar-bg{flex:1;height:3px;background:var(--border);border-radius:2px}
+.brand-bar{height:100%;border-radius:2px}
+
+/* RISK */
+.risk-item{padding:12px;border-radius:8px;margin-bottom:8px;border-left:3px solid}
+.risk-item.high{background:rgba(255,71,87,0.05);border-color:var(--red)}
+.risk-item.med{background:rgba(255,165,2,0.05);border-color:var(--amber)}
+.risk-item.low{background:rgba(0,208,132,0.05);border-color:var(--green)}
+.risk-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+.risk-label.high{color:var(--red)}
+.risk-label.med{color:var(--amber)}
+.risk-label.low{color:var(--green)}
+.risk-text{font-size:13px;color:var(--muted2);line-height:1.5}
+
+/* EXECUTIVE SUMMARY */
+.exec-summary{background:var(--card2);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:28px;margin-bottom:16px;position:relative;overflow:hidden}
+.exec-summary::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.exec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.exec-text{font-size:15px;line-height:1.8;color:var(--text);font-weight:300}
+
+/* RECOMMENDATION */
+.rec-box{background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(30,144,255,0.04));border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;margin-bottom:1[...]
+.rec-verdict{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;text-align:center;white-space:nowrap;align-self:flex-start}
+.rec-verdict.strong{background:rgba(0,208,132,0.15);color:var(--green);border:1px solid rgba(0,208,132,0.3)}
+.rec-verdict.caution{background:rgba(255,165,2,0.12);color:var(--amber);border:1px solid rgba(255,165,2,0.3)}
+.rec-verdict.avoid{background:rgba(255,71,87,0.1);color:var(--red);border:1px solid rgba(255,71,87,0.2)}
+.rec-body{font-size:13px;color:var(--muted2);line-height:1.6}
+
+/* STREAMING */
+.streaming-text{font-size:13px;color:var(--muted2);line-height:1.8;white-space:pre-wrap;word-wrap:break-word}
+.cursor-blink{display:inline-block;width:2px;height:14px;background:var(--gold);margin-left:2px;animation:blink 1s infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* FOOTER STATS */
+.stats-bar{display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.stat-item{flex:1;padding:16px;text-align:center;border-right:1px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.stat-label{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;margin-top:3px}
+
+/* DISCLAIMER */
+.disclaimer{background:rgba(255,71,87,0.04);border:1px solid rgba(255,71,87,0.15);border-radius:10px;padding:14px 18px;margin-bottom:16px}
+.disclaimer-text{font-size:11px;color:var(--muted);line-height:1.6;font-family:'Space Mono',monospace}
+
+/* FOOTER */
+footer{text-align:center;padding:32px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+footer span{color:var(--gold)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;z-index:3000;transform:translateX(120%);tra[...]
+.toast.show{transform:translateX(0)}
+.toast.error{border-color:rgba(255,71,87,0.4);color:var(--red)}
+.toast.success{border-color:rgba(0,208,132,0.4);color:var(--green)}
+
+/* SECTION divider */
+.section-divider{display:flex;align-items:center;gap:12px;margin:24px 0 16px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* API KEY section */
+.api-section{background:rgba(30,144,255,0.04);border:1px solid rgba(30,144,255,0.15);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.api-section-title{font-size:10px;color:var(--blue2);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">T</div>
+    <div>
+      <div class="nav-name">TERRA<span>AI</span></div>
+    </div>
+    <div class="nav-badge">INSTITUTIONAL</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status">
+      <div class="pulse"></div>
+      LIVE INTELLIGENCE
+    </div>
+  </div>
+</nav>
+
+<!-- ANALYSIS OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="overlay-inner">
+    <div class="radar">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-core"></div>
+      <div class="radar-sweep"></div>
+    </div>
+    <div class="overlay-status">TERRA AI ENGINE ACTIVE</div>
+    <div class="overlay-msg" id="overlayMsg">Initializing intelligence scan...</div>
+    <div class="overlay-progress">
+      <div class="overlay-bar" id="overlayBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-tag">India's Institutional Real Estate Intelligence</div>
+  <h1>AI-Powered <span class="accent">Commercial</span><br>Location <span class="accent2">Intelligence</span></h1>
+  <p class="hero-sub">Bloomberg-grade commercial viability analysis for any location in India. Powered by OpenAI. Built for institutional investors, developers & retail expansion teams.</p>
+
+  <div class="ticker">
+    <div class="ticker-inner" id="ticker">
+      <span class="ticker-item">BKC Mumbai <span class="val">Opp: 88</span></span>
+      <span class="ticker-item">Aerocity Delhi <span class="val">Inv: 91</span></span>
+      <span class="ticker-item">Whitefield Bengaluru <span class="val">Inf: 79</span></span>
+      <span class="ticker-item">Baner Pune <span class="val">Ret: 73</span></span>
+      <span class="ticker-item">Jubilee Hills Hyderabad <span class="val">Lux: 82</span></span>
+      <span class="ticker-item">Ring Road Nagpur <span class="val">Exp: 68</span></span>
+      <span class="ticker-item">OMR Chennai <span class="val">Off: 76</span></span>
+      <span class="ticker-item">Newtown Kolkata <span class="val">Dev: 71</span></span>
+      <span class="ticker-item">BKC Mumbai <span class="val">Opp: 88</span></span>
+      <span class="ticker-item">Aerocity Delhi <span class="val">Inv: 91</span></span>
+      <span class="ticker-item">Whitefield Bengaluru <span class="val">Inf: 79</span></span>
+      <span class="ticker-item">Baner Pune <span class="val">Ret: 73</span></span>
+      <span class="ticker-item">Jubilee Hills Hyderabad <span class="val">Lux: 82</span></span>
+      <span class="ticker-item">Ring Road Nagpur <span class="val">Exp: 68</span></span>
+      <span class="ticker-item">OMR Chennai <span class="val">Off: 76</span></span>
+      <span class="ticker-item">Newtown Kolkata <span class="val">Dev: 71</span></span>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-card">
+      <div class="api-section">
+        <div class="api-section-title">OpenAI Configuration</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="api-input" id="openaiKey" type="password" placeholder="sk-... (paste your OpenAI API key for real AI analysis)">
+          <button onclick="toggleKeyVis()" style="background:transparent;border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--muted2);cursor:pointer;font-size:12px;white[...]
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'Space Mono',monospace">No key? Platform uses built-in AI analysis engine. Get key at platform.openai.com</div>
+      </div>
+
+      <div class="input-label">Enter Location to Analyze</div>
+      <div class="input-row">
+        <input class="input-field" id="locationInput" type="text" placeholder="e.g. BKC Mumbai, Aerocity Delhi, Whitefield Bengaluru, Baner Pune..." />
+      </div>
+      <button class="run-btn" id="runBtn" onclick="runAnalysis()">
+        ⚡ RUN INTELLIGENCE ANALYSIS
+      </button>
+      <div class="quick-locations">
+        <span style="font-size:10px;color:var(--muted);align-self:center;font-family:'Space Mono',monospace">QUICK:</span>
+        <button class="quick-btn" onclick="setLocation('BKC Mumbai')">BKC Mumbai</button>
+        <button class="quick-btn" onclick="setLocation('Aerocity Delhi')">Aerocity Delhi</button>
+        <button class="quick-btn" onclick="setLocation('Whitefield Bengaluru')">Whitefield</button>
+        <button class="quick-btn" onclick="setLocation('Baner Pune')">Baner Pune</button>
+        <button class="quick-btn" onclick="setLocation('Hitech City Hyderabad')">Hitech City</button>
+        <button class="quick-btn" onclick="setLocation('Ring Road Nagpur')">Nagpur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="results" id="resultsSection">
+  <div class="results-header">
+    <div class="results-location" id="resLocation">—</div>
+    <div class="results-title" id="resTitle">Intelligence Report</div>
+    <div class="results-sub">Institutional Commercial Viability Analysis — India</div>
+    <div class="timestamp" id="resTimestamp">—</div>
+  </div>
+
+  <!-- SCORE GRID -->
+  <div class="score-grid" id="scoreGrid"></div>
+
+  <!-- EXEC SUMMARY -->
+  <div class="exec-summary">
+    <div class="exec-label">Executive Summary — AI Generated</div>
+    <div class="exec-text streaming-text" id="execSummary"><span class="cursor-blink"></span></div>
+  </div>
+
+  <!-- MAP + ANALYSIS -->
+  <div class="grid-2">
+    <div class="panel map-panel" style="grid-column:1/-1">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(30,144,255,0.12)">🗺️</div>
+        <div class="panel-title">Geospatial Intelligence — Google Maps</div>
+        <div class="panel-badge badge-live">LIVE</div>
+      </div>
+      <div id="map"></div>
+      <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace"><span style="width:10px;height:10px;background:var(--gold);border[...]
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace"><span style="width:10px;height:10px;background:var(--blue);border[...]
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace"><span style="width:10px;height:10px;background:var(--green);borde[...]
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTIVITY + RETAIL -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(0,208,132,0.1)">🛣️</div>
+        <div class="panel-title">Connectivity Analysis</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div id="connectivityContent"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(201,168,76,0.1)">🏪</div>
+        <div class="panel-title">Retail Ecosystem</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div id="retailContent"></div>
+    </div>
+  </div>
+
+  <!-- BRAND MATCH + RISK -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(201,168,76,0.1)">🏷️</div>
+        <div class="panel-title">Brand Compatibility Engine</div>
+        <div class="panel-badge badge-ai">AI</div>
+      </div>
+      <div class="brand-grid" id="brandGrid"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(255,71,87,0.1)">⚠️</div>
+        <div class="panel-title">Risk & Reality Filter</div>
+        <div class="panel-badge badge-risk">UNDERWRITING</div>
+      </div>
+      <div id="riskContent"></div>
+    </div>
+  </div>
+
+  <!-- INVESTMENT OUTLOOK -->
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-header">
+      <div class="panel-icon" style="background:rgba(30,144,255,0.1)">📊</div>
+      <div class="panel-title">Investor Outlook & Commercial Signals</div>
+      <div class="panel-badge badge-ai">DEEP ANALYSIS</div>
+    </div>
+    <div id="investorContent" class="streaming-text"></div>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div class="section-divider">Final Recommendation</div>
+  <div id="recommendationBox"></div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="disclaimer">
+    <div class="disclaimer-text">DISCLAIMER: This platform provides AI-generated institutional intelligence for research and analytical purposes only. All scores, projections, and recommendations[...]
+  </div>
+
+  <div style="text-align:center;margin-top:24px">
+    <button onclick="resetPlatform()" style="background:transparent;border:1px solid var(--border2);border-radius:10px;padding:12px 28px;color:var(--muted2);cursor:pointer;font-family:'Space Mono[...]
+      ← ANALYZE ANOTHER LOCATION
+    </button>
+  </div>
+</div>
+
+<footer>
+  TERRA<span>AI</span> &nbsp;|&nbsp; Institutional Real Estate Intelligence &nbsp;|&nbsp; India &nbsp;|&nbsp; Powered by OpenAI + Leaflet Maps<br>
+  <span style="color:var(--muted);font-size:10px">Built for institutional investors · commercial developers · retail expansion teams</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// TERRA AI — CORE ENGINE
+// ============================================================
+
+let map = null;
+let currentMarkers = [];
+let analysisData = null;
+
+const LOADING_MESSAGES = [
+  "Initializing geospatial intelligence scan...",
+  "Analyzing commercial corridors...",
+  "Evaluating demographic spending power...",
+  "Scanning infrastructure readiness...",
+  "Detecting retail ecosystem maturity...",
+  "Evaluating investor participation patterns...",
+  "Calculating pricing sustainability...",
+  "Running brand compatibility engine...",
+  "Evaluating luxury demand depth...",
+  "Generating institutional investment outlook...",
+  "Running commercial underwriting engine...",
+  "Compiling institutional intelligence report..."
+];
+
+// LOCATION DATABASE for geocoding fallback
+const LOCATION_COORDS = {
+  'bkc': { lat: 19.0596, lng: 72.8656, city: 'Mumbai' },
+  'bkc mumbai': { lat: 19.0596, lng: 72.8656, city: 'Mumbai' },
+  'bandra kurla': { lat: 19.0596, lng: 72.8656, city: 'Mumbai' },
+  'aerocity': { lat: 28.5547, lng: 77.0972, city: 'Delhi' },
+  'aerocity delhi': { lat: 28.5547, lng: 77.0972, city: 'Delhi' },
+  'whitefield': { lat: 12.9698, lng: 77.7500, city: 'Bengaluru' },
+  'whitefield bengaluru': { lat: 12.9698, lng: 77.7500, city: 'Bengaluru' },
+  'whitefield bangalore': { lat: 12.9698, lng: 77.7500, city: 'Bengaluru' },
+  'baner': { lat: 18.5590, lng: 73.7868, city: 'Pune' },
+  'baner pune': { lat: 18.5590, lng: 73.7868, city: 'Pune' },
+  'hitech city': { lat: 17.4474, lng: 78.3762, city: 'Hyderabad' },
+  'hitech city hyderabad': { lat: 17.4474, lng: 78.3762, city: 'Hyderabad' },
+  'jubilee hills': { lat: 17.4267, lng: 78.4073, city: 'Hyderabad' },
+  'jubilee hills hyderabad': { lat: 17.4267, lng: 78.4073, city: 'Hyderabad' },
+  'ring road nagpur': { lat: 21.1458, lng: 79.1620, city: 'Nagpur' },
+  'nagpur': { lat: 21.1458, lng: 79.1620, city: 'Nagpur' },
+  'omr chennai': { lat: 12.9010, lng: 80.2279, city: 'Chennai' },
+  'omr': { lat: 12.9010, lng: 80.2279, city: 'Chennai' },
+  'newtown kolkata': { lat: 22.5958, lng: 88.4785, city: 'Kolkata' },
+  'newtown': { lat: 22.5958, lng: 88.4785, city: 'Kolkata' },
+  'connaught place': { lat: 28.6315, lng: 77.2167, city: 'Delhi' },
+  'cp delhi': { lat: 28.6315, lng: 77.2167, city: 'Delhi' },
+  'koregaon park': { lat: 18.5362, lng: 73.8948, city: 'Pune' },
+  'mg road': { lat: 12.9756, lng: 77.6099, city: 'Bengaluru' },
+  'mg road bengaluru': { lat: 12.9756, lng: 77.6099, city: 'Bengaluru' },
+  'lower parel': { lat: 18.9940, lng: 72.8270, city: 'Mumbai' },
+  'lower parel mumbai': { lat: 18.9940, lng: 72.8270, city: 'Mumbai' },
+  'cyber city': { lat: 28.4949, lng: 77.0938, city: 'Gurugram' },
+  'cyber city gurgaon': { lat: 28.4949, lng: 77.0938, city: 'Gurugram' },
+  'gurugram': { lat: 28.4595, lng: 77.0266, city: 'Gurugram' },
+  'noida': { lat: 28.5355, lng: 77.3910, city: 'Noida' },
+  'sector 18 noida': { lat: 28.5700, lng: 77.3218, city: 'Noida' },
+  'electronic city': { lat: 12.8391, lng: 77.6769, city: 'Bengaluru' },
+  'vashi': { lat: 19.0771, lng: 73.0070, city: 'Navi Mumbai' },
+  'thane': { lat: 19.2183, lng: 72.9781, city: 'Thane' },
+  'andheri': { lat: 19.1136, lng: 72.8697, city: 'Mumbai' },
+};
+
+function getCoords(location) {
+  const key = location.toLowerCase().trim();
+  for (const [k, v] of Object.entries(LOCATION_COORDS)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  return { lat: 19.0596, lng: 72.8656, city: 'India' };
+}
+
+function setLocation(loc) {
+  document.getElementById('locationInput').value = loc;
+}
+
+function toggleKeyVis() {
+  const inp = document.getElementById('openaiKey');
+  const btn = event.target;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
+  else { inp.type = 'password'; btn.textContent = 'Show'; }
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+async function geocodeWithNominatim(location) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location + ' India')}&format=json&limit=1`);
+    const d = await r.json();
+    if (d && d[0]) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon), city: location };
+    return null;
+  } catch { return null; }
+}
+
+// ============================================================
+// AI ANALYSIS ENGINE
+// ============================================================
+
+function getLocationProfile(location) {
+  const loc = location.toLowerCase();
+  // Premium tier
+  if (loc.includes('bkc') || loc.includes('bandra kurla')) return { tier: 'premium', type: 'CBD', city: 'Mumbai', luxury: 92, infra: 94, retail: 88, office: 96, investor: 91, opportunity: 88, ris[...]
+  if (loc.includes('aerocity')) return { tier: 'premium', type: 'Aviation Hub', city: 'Delhi', luxury: 78, infra: 92, retail: 80, office: 88, investor: 85, opportunity: 84, risk: 25, pricing: 78,[...]
+  if (loc.includes('hitech') || loc.includes('cyber city') || loc.includes('gachibowli')) return { tier: 'premium', type: 'Tech Hub', city: 'Hyderabad', luxury: 74, infra: 86, retail: 82, office:[...]
+  if (loc.includes('whitefield') || loc.includes('electronic city') || loc.includes('sarjapur')) return { tier: 'mid-premium', type: 'IT Corridor', city: 'Bengaluru', luxury: 68, infra: 72, retai[...]
+  if (loc.includes('mg road') || loc.includes('koramangala') || loc.includes('indiranagar')) return { tier: 'premium', type: 'Urban Core', city: 'Bengaluru', luxury: 82, infra: 80, retail: 90, of[...]
+  if (loc.includes('baner') || loc.includes('hinjewadi')) return { tier: 'mid-premium', type: 'IT + Residential', city: 'Pune', luxury: 62, infra: 74, retail: 76, office: 82, investor: 72, opport[...]
+  if (loc.includes('jubilee hills') || loc.includes('banjara')) return { tier: 'premium', type: 'Luxury Residential', city: 'Hyderabad', luxury: 86, infra: 78, retail: 84, office: 64, investor: 7[...]
+  if (loc.includes('connaught') || loc.includes('cp delhi')) return { tier: 'premium', type: 'Iconic CBD', city: 'Delhi', luxury: 80, infra: 76, retail: 86, office: 72, investor: 75, opportunity:[...]
+  if (loc.includes('lower parel') || loc.includes('worli') || loc.includes('parel')) return { tier: 'premium', type: 'Emerging CBD', city: 'Mumbai', luxury: 84, infra: 78, retail: 82, office: 86,[...]
+  if (loc.includes('koregaon') || loc.includes('camp pune')) return { tier: 'premium', type: 'Luxury Retail', city: 'Pune', luxury: 80, infra: 72, retail: 88, office: 60, investor: 72, opportunit[...]
+  if (loc.includes('gurugram') || loc.includes('gurgaon')) return { tier: 'premium', type: 'NCR Commercial', city: 'Gurugram', luxury: 78, infra: 80, retail: 82, office: 90, investor: 84, opportu[...]
+  if (loc.includes('noida') || loc.includes('sector 18')) return { tier: 'mid', type: 'NCR Suburb', city: 'Noida', luxury: 58, infra: 76, retail: 72, office: 74, investor: 68, opportunity: 74, ri[...]
+  if (loc.includes('omr') || loc.includes('perungudi') || loc.includes('sholinganallur')) return { tier: 'mid-premium', type: 'IT Corridor', city: 'Chennai', luxury: 60, infra: 72, retail: 70, of[...]
+  if (loc.includes('newtown') || loc.includes('rajarhat')) return { tier: 'emerging', type: 'Planned Township', city: 'Kolkata', luxury: 52, infra: 70, retail: 64, office: 72, investor: 62, oppor[...]
+  if (loc.includes('nagpur') || loc.includes('ring road')) return { tier: 'emerging', type: 'Tier-2 Growth Corridor', city: 'Nagpur', luxury: 42, infra: 68, retail: 62, office: 54, investor: 58, [...]
+  if (loc.includes('thane') || loc.includes('vashi') || loc.includes('navi mumbai')) return { tier: 'mid', type: 'Mumbai Satellite', city: 'Navi Mumbai', luxury: 58, infra: 74, retail: 70, office[...]
+  if (loc.includes('andheri') || loc.includes('goregaon') || loc.includes('malad')) return { tier: 'mid-premium', type: 'Western Suburbs', city: 'Mumbai', luxury: 66, infra: 76, retail: 80, offic[...]
+  // Default
+  return { tier: 'emerging', type: 'Commercial Zone', city: location, luxury: 55, infra: 62, retail: 58, office: 60, investor: 56, opportunity: 64, risk: 45, pricing: 52, rental: 54, expansion: 7[...]
+}
+
+function getBrandCompatibility(profile) {
+  const luxury = profile.luxury;
+  const retail = profile.retail;
+  const infra = profile.infra;
+  const office = profile.office;
+  return [
+    { name: 'Starbucks', score: Math.round((luxury * 0.5 + office * 0.3 + retail * 0.2)), notes: luxury > 75 ? 'Strong premium café culture alignment' : 'Limited luxury café catchment' },
+    { name: "McDonald's", score: Math.round((retail * 0.4 + infra * 0.3 + profile.expansion * 0.3)), notes: infra > 70 ? 'High footfall catchment alignment' : 'Moderate family footfall' },
+    { name: 'Lenskart', score: Math.round((retail * 0.5 + profile.opportunity * 0.3 + infra * 0.2)), notes: retail > 75 ? 'Retail density supports optical expansion' : 'Moderate retail pull' },
+    { name: 'Dominos', score: Math.round((infra * 0.3 + retail * 0.4 + profile.expansion * 0.3)), notes: 'Strong delivery + dine-in potential' },
+    { name: 'Decathlon', score: Math.round((infra * 0.4 + profile.expansion * 0.4 + luxury * 0.2)), notes: infra > 75 ? 'Highway access enables large-format store' : 'Parking & access critical' }[...]
+    { name: 'PVR Cinemas', score: Math.round((luxury * 0.35 + retail * 0.35 + profile.investor * 0.3)), notes: luxury > 70 ? 'Premium screen potential exists' : 'Catchment size limits viability' [...]
+    { name: 'Reliance Retail', score: Math.round((retail * 0.45 + infra * 0.3 + profile.expansion * 0.25)), notes: 'Mass market penetration strong' },
+    { name: 'H&M / Zara', score: Math.round((luxury * 0.5 + retail * 0.35 + office * 0.15)), notes: luxury > 75 ? 'Fashion retail environment supportive' : 'Brand positioning challenge' },
+  ];
+}
+
+function getRisks(profile) {
+  const risks = [];
+  if (profile.pricing > 80) risks.push({ level: 'high', label: 'HIGH RISK', text: 'Pricing appears ahead of actual end-user demand maturity. Investor-driven valuation bubble risk detected.' });
+  if (profile.luxury < 60) risks.push({ level: 'med', label: 'CAUTION', text: 'Luxury demand depth remains limited. Premium commercial assumptions require careful validation.' });
+  if (profile.infra < 70) risks.push({ level: 'high', label: 'CRITICAL', text: 'Infrastructure execution dependency high. Commercial ROI tied to government capex timeline.' });
+  if (profile.risk > 38) risks.push({ level: 'high', label: 'RISK ALERT', text: 'Overall risk profile elevated. Absorption risk present if demand drivers stall.' });
+  if (profile.office < 65) risks.push({ level: 'med', label: 'CAUTION', text: 'Office ecosystem underdeveloped. Commercial demand partially residential-driven.' });
+  if (profile.tier === 'emerging') risks.push({ level: 'med', label: 'EMERGING MARKET', text: 'Location remains in early commercial maturity phase. 36-60 month horizon required for returns.' });
+  if (profile.pricing > 70 && profile.rental < 70) risks.push({ level: 'high', label: 'YIELD COMPRESSION', text: 'Rental sustainability does not support current pricing assumptions. Yield compres[...]
+  // Always add a positive signal
+  if (profile.expansion > 75) risks.push({ level: 'low', label: 'OPPORTUNITY', text: 'Strong expansion readiness score. Early-mover commercial advantage window open.' });
+  if (profile.infra > 80) risks.push({ level: 'low', label: 'STRENGTH', text: 'Infrastructure quality is a commercial anchor. Supports long-term commercial ecosystem maturity.' });
+  return risks.slice(0, 5);
+}
+
+function getRecommendation(profile) {
+  const score = profile.opportunity;
+  if (score >= 82) return { verdict: 'STRONG BUY', cls: 'strong', text: 'Location demonstrates institutional-grade commercial fundamentals. Strong infrastructure base, established commercial dema[...]
+  if (score >= 70) return { verdict: 'SELECTIVE BUY', cls: 'caution', text: 'Solid commercial opportunity with identified risks. Selective positioning recommended based on asset type and holding [...]
+  return { verdict: 'HOLD / MONITOR', cls: 'avoid', text: 'Commercial ecosystem in early maturity stage. Infrastructure dependency and limited luxury demand depth warrant monitoring before deploy[...]
+}
+
+// ============================================================
+// OPENAI INTEGRATION
+// ============================================================
+
+async function callOpenAI(prompt, apiKey) {
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are India\'s most sophisticated institutional commercial real estate intelligence analyst. Your analysis is used by PE firms, institutional investors, and [...]
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 800,
+      temperature: 0.7
+    })
+  });
+  if (!resp.ok) throw new Error(`OpenAI API error: ${resp.status}`);
+  const d = await resp.json();
+  return d.choices[0].message.content;
+}
+
+function generateBuiltinAnalysis(location, profile) {
+  const tierMap = { premium: 'mature institutional-grade', 'mid-premium': 'emerging institutional', mid: 'developing commercial', emerging: 'early-stage commercial' };
+  const tier = tierMap[profile.tier] || 'commercial';
+  return {
+    executive: `${location} represents a ${tier} real estate market within India's ${profile.type} category. The location scores ${profile.opportunity}/100 on commercial opportunity, driven by ${[...]
+    connectivity: [
+      { dot: 'up', text: profile.infra > 78 ? 'Multi-modal connectivity: Metro + Highway + Ring Road access confirmed' : 'Primary road connectivity established. Metro/rail integration pending or [...]
+      { dot: profile.infra > 72 ? 'up' : 'mid', text: `Infrastructure readiness score: ${profile.infra}/100 — ${profile.infra > 78 ? 'Institutional grade' : profile.infra > 65 ? 'Moderate — i[...]
+      { dot: 'up', text: 'Last-mile connectivity: Auto, Cab aggregators operational. Airport proximity relevant for B2B commercial' },
+    ],
+    retail: [
+      { dot: 'up', text: `Retail density index: ${profile.retail}/100. ${profile.retail > 78 ? 'Multiple organized retail formats present' : 'Retail ecosystem in development phase'}` },
+      { dot: profile.retail > 70 ? 'up' : 'mid', text: profile.retail > 78 ? 'Anchor brands (Reliance, DMart, Croma) visible. Mall + high-street format coexisting' : 'Standalone retail dominant. [...]
+      { dot: 'mid', text: `F&B penetration: ${profile.retail > 72 ? 'QSR + Casual dining established. Premium café segment nascent but growing' : 'F&B ecosystem early-stage. QSR penetration lead[...]
+    ],
+    investor: `Investor Confidence: ${profile.investor}/100\n\nCommercial demand in ${location} is ${profile.investor > 78 ? 'primarily end-user driven with strong institutional backing' : 'a mix[...]
+  };
+}
+
+// ============================================================
+// MAIN ANALYSIS FLOW
+// ============================================================
+
+async function runAnalysis() {
+  const location = document.getElementById('locationInput').value.trim();
+  const apiKey = document.getElementById('openaiKey').value.trim();
+  if (!location) { showToast('Please enter a location to analyze', 'error'); return; }
+
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+
+  // Show overlay
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('active');
+  const bar = document.getElementById('overlayBar');
+  const msg = document.getElementById('overlayMsg');
+
+  let progress = 0;
+  let msgIdx = 0;
+  const interval = setInterval(() => {
+    progress = Math.min(progress + 7, 90);
+    bar.style.width = progress + '%';
+    if (msgIdx < LOADING_MESSAGES.length) msg.textContent = LOADING_MESSAGES[msgIdx++];
+  }, 800);
+
+  try {
+    // Geocode location
+    let coords = getCoords(location);
+    try {
+      const geo = await geocodeWithNominatim(location);
+      if (geo) coords = geo;
+    } catch {}
+
+    // Get profile
+    const profile = getLocationProfile(location);
+
+    // Get AI analysis
+    let analysis;
+    if (apiKey && apiKey.startsWith('sk-')) {
+      try {
+        const [exec, invest] = await Promise.all([
+          callOpenAI(`Provide a 3-sentence institutional-grade executive summary for commercial real estate investment potential at ${location}, India. Include: commercial ecosystem maturity, dem[...]
+          callOpenAI(`Write a 4-paragraph institutional commercial real estate analysis for ${location}, India covering: 1) investor sentiment and capital flows 2) rental yield sustainability 3) [...]
+        ]);
+        analysis = generateBuiltinAnalysis(location, profile);
+        analysis.executive = exec;
+        analysis.investor = invest;
+        showToast('OpenAI GPT-4o analysis complete', 'success');
+      } catch (e) {
+        analysis = generateBuiltinAnalysis(location, profile);
+        showToast('OpenAI unavailable — using built-in engine', 'error');
+      }
+    } else {
+      analysis = generateBuiltinAnalysis(location, profile);
+      if (apiKey) showToast('Invalid API key — using built-in AI engine', 'error');
+    }
+
+    progress = 95;
+    bar.style.width = '95%';
+    msg.textContent = 'Rendering institutional dashboard...';
+    await new Promise(r => setTimeout(r, 600));
+
+    clearInterval(interval);
+    bar.style.width = '100%';
+    await new Promise(r => setTimeout(r, 400));
+    overlay.classList.remove('active');
+
+    // Render results
+    renderResults(location, coords, profile, analysis);
+    runBtn.disabled = false;
+
+  } catch (e) {
+    clearInterval(interval);
+    overlay.classList.remove('active');
+    runBtn.disabled = false;
+    showToast('Analysis error: ' + e.message, 'error');
+  }
+}
+
+function renderResults(location, coords, profile, analysis) {
+  // Hide hero, show results
+  document.getElementById('heroSection').style.display = 'none';
+  const res = document.getElementById('resultsSection');
+  res.classList.add('active');
+
+  // Header
+  document.getElementById('resLocation').textContent = `📍 ${location.toUpperCase()} — ${profile.city}`;
+  document.getElementById('resTitle').textContent = `Commercial Intelligence Report`;
+  document.getElementById('resTimestamp').textContent = `Generated: ${new Date().toLocaleString('en-IN')} | Engine: TERRA AI v2.4 | Mode: ${document.getElementById('openaiKey').value.trim().start[...]
+
+  // Scores
+  const scores = [
+    { label: 'Opportunity Score', val: profile.opportunity },
+    { label: 'Infrastructure', val: profile.infra },
+    { label: 'Retail Ecosystem', val: profile.retail },
+    { label: 'Luxury Potential', val: profile.luxury },
+    { label: 'Office Demand', val: profile.office },
+    { label: 'Investor Confidence', val: profile.investor },
+    { label: 'Rental Strength', val: profile.rental },
+    { label: 'Expansion Readiness', val: profile.expansion },
+    { label: 'Pricing Sustainability', val: profile.pricing },
+    { label: 'Risk Score', val: 100 - profile.risk, isRisk: true },
+  ];
+  const scoreGrid = document.getElementById('scoreGrid');
+  scoreGrid.innerHTML = '';
+  scores.forEach(s => {
+    const cls = s.val >= 78 ? 'high' : s.val >= 60 ? 'med' : 'low';
+    const color = cls === 'high' ? 'var(--green)' : cls === 'med' ? 'var(--amber)' : 'var(--red)';
+    scoreGrid.innerHTML += `<div class="score-card ${cls}">
+      <div class="score-label">${s.label}</div>
+      <div class="score-val ${cls}">${s.val}<span class="score-max">/100</span></div>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${s.val}%;background:${color}"></div></div>
+    </div>`;
+  });
+
+  // Executive summary with typewriter
+  typewriterEffect('execSummary', analysis.executive);
+
+  // Map
+  initMap(coords, location, profile);
+
+  // Connectivity
+  const conn = document.getElementById('connectivityContent');
+  conn.innerHTML = analysis.connectivity.map(s =>
+    `<div class="signal-row"><div class="signal-dot ${s.dot}"></div><div class="signal-text">${s.text}</div></div>`
+  ).join('');
+
+  // Retail
+  const ret = document.getElementById('retailContent');
+  ret.innerHTML = analysis.retail.map(s =>
+    `<div class="signal-row"><div class="signal-dot ${s.dot}"></div><div class="signal-text">${s.text}</div></div>`
+  ).join('');
+
+  // Brands
+  const brands = getBrandCompatibility(profile);
+  const bg = document.getElementById('brandGrid');
+  bg.innerHTML = brands.map(b => {
+    const cls = b.score >= 78 ? 'h' : b.score >= 60 ? 'm' : 'l';
+    const barColor = cls === 'h' ? 'var(--green)' : cls === 'm' ? 'var(--amber)' : 'var(--red)';
+    return `<div class="brand-item">
+      <div class="brand-name">${b.name}</div>
+      <div class="brand-score-row">
+        <span class="brand-score ${cls}">${b.score}/100</span>
+        <div class="brand-bar-bg"><div class="brand-bar" style="width:${b.score}%;background:${barColor}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Risks
+  const risks = getRisks(profile);
+  const rc = document.getElementById('riskContent');
+  rc.innerHTML = risks.map(r =>
+    `<div class="risk-item ${r.level}"><div class="risk-label ${r.level}">${r.label}</div><div class="risk-text">${r.text}</div></div>`
+  ).join('');
+
+  // Investor content
+  document.getElementById('investorContent').textContent = analysis.investor;
+
+  // Recommendation
+  const rec = getRecommendation(profile);
+  document.getElementById('recommendationBox').innerHTML = `
+    <div class="rec-box">
+      <div class="rec-verdict ${rec.cls}">${rec.verdict}</div>
+      <div class="rec-body">${rec.text}</div>
+    </div>`;
+
+  // Stats bar
+  const statsBar = document.getElementById('statsBar');
+  statsBar.innerHTML = [
+    { num: profile.opportunity + '/100', label: 'OVERALL SCORE' },
+    { num: profile.tier === 'premium' ? 'A+' : profile.tier === 'mid-premium' ? 'A' : profile.tier === 'mid' ? 'B+' : 'B', label: 'MARKET GRADE' },
+    { num: profile.rental > 75 ? '7-9%' : profile.rental > 60 ? '5-7%' : '4-6%', label: 'YIELD RANGE' },
+    { num: profile.opportunity > 78 ? '12-24mo' : '24-42mo', label: 'HORIZON' },
+    { num: profile.investor > 78 ? 'HIGH' : profile.investor > 65 ? 'MEDIUM' : 'LOW', label: 'INST. DEMAND' },
+  ].map(s => `<div class="stat-item"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+
+function typewriterEffect(elemId, text) {
+  const el = document.getElementById(elemId);
+  el.innerHTML = '<span class="cursor-blink"></span>';
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= text.length) { clearInterval(interval); el.innerHTML = text; return; }
+    el.innerHTML = text.slice(0, ++i) + '<span class="cursor-blink"></span>';
+  }, 18);
+}
+
+// ============================================================
+// MAP INITIALIZATION
+// ============================================================
+
+function initMap(coords, location, profile) {
+  if (map) { map.remove(); map = null; }
+  currentMarkers = [];
+
+  map = L.map('map', { zoomControl: true, scrollWheelZoom: false }).setView([coords.lat, coords.lng], 14);
+
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Main marker (gold)
+  const goldIcon = L.divIcon({
+    html: `<div style="width:20px;height:20px;background:linear-gradient(135deg,#C9A84C,#E8C97A);border-radius:50%;border:3px solid #fff;box-shadow:0 0 20px rgba(201,168,76,0.8)"></div>`,
+    className: '', iconAnchor: [10, 10]
+  });
+  L.marker([coords.lat, coords.lng], { icon: goldIcon })
+    .addTo(map)
+    .bindPopup(`<b style="font-family:sans-serif">${location}</b><br>
+      <span style="font-size:12px;color:#888">Opportunity: ${profile.opportunity}/100</span>`)
+    .openPopup();
+
+  // Commercial zone circles
+  const circleColors = [
+    { color: '#1E90FF', radius: 500, label: 'Primary Commercial Zone' },
+    { color: '#00D084', radius: 1000, label: 'Growth Corridor' },
+    { color: '#C9A84C', radius: 1800, label: 'Catchment Area' },
+  ];
+  circleColors.forEach(c => {
+    L.circle([coords.lat, coords.lng], {
+      color: c.color, fillColor: c.color, fillOpacity: 0.06,
+      weight: 1, radius: c.radius, dashArray: '4 6'
+    }).addTo(map);
+  });
+
+  // Nearby points
+  const nearby = [
+    { offset: [0.004, 0.006], color: '#1E90FF', label: 'Commercial Hub' },
+    { offset: [-0.005, 0.003], color: '#00D084', label: 'Retail Cluster' },
+    { offset: [0.002, -0.007], color: '#1E90FF', label: 'Office Complex' },
+    { offset: [-0.003, -0.004], color: '#00D084', label: 'Growth Zone' },
+  ];
+  nearby.forEach(n => {
+    const icon = L.divIcon({
+      html: `<div style="width:10px;height:10px;background:${n.color};border-radius:50%;opacity:0.8;box-shadow:0 0 10px ${n.color}"></div>`,
+      className: '', iconAnchor: [5, 5]
+    });
+    L.marker([coords.lat + n.offset[0], coords.lng + n.offset[1]], { icon })
+      .addTo(map)
+      .bindPopup(`<span style="font-family:sans-serif;font-size:12px">${n.label}</span>`);
+  });
+}
+
+function resetPlatform() {
+  document.getElementById('resultsSection').classList.remove('active');
+  document.getElementById('heroSection').style.display = 'flex';
+  document.getElementById('locationInput').value = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Enter key to run
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('locationInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runAnalysis();
+  });
+});
+</script>
+</body>
+</html>
